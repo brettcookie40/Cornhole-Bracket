@@ -32,6 +32,8 @@ Players per team (1–4) and player names are optional and shown under each team
 
 ## Use it
 [JoyCollect live site](https://brettcookie40.github.io/Cornhole-Bracket/)
+
+In test:
 Open `index.html` in any modern browser — that's it. Nothing to install.
 
 ## Deploy to GitHub Pages
