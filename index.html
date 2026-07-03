@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0f172a" />
+<title>Cornhole Bracket</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --panel-2: #273549;
+    --line: #33425c;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #f59e0b;
+    --accent-press: #d97706;
+    --win: #16a34a;
+    --win-press: #15803d;
+    --danger: #dc2626;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 17px;
+    line-height: 1.4;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 16px 14px 96px; }
+  header.app {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; margin-bottom: 14px;
+  }
+  header.app h1 { font-size: 1.35rem; margin: 0; letter-spacing: 0.3px; }
+  header.app h1 span { color: var(--accent); }
+  .muted { color: var(--muted); }
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 14px; margin-bottom: 14px;
+  }
+  label { display: block; font-size: 0.85rem; color: var(--muted); margin: 0 0 6px; }
+  input[type=text], input[type=number], select {
+    width: 100%; background: var(--panel-2); color: var(--text);
+    border: 1px solid var(--line); border-radius: 10px;
+    padding: 12px 12px; font-size: 1rem;
+  }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 0; }
+
+  /* Buttons */
+  button { font-family: inherit; cursor: pointer; border: none; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--panel-2); color: var(--text);
+    border: 1px solid var(--line); border-radius: 12px;
+    padding: 12px 16px; font-size: 1rem; font-weight: 600;
+    min-height: 48px;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn.primary { background: var(--accent); color: #1a1206; border-color: transparent; }
+  .btn.primary:active { background: var(--accent-press); }
+  .btn.ghost { background: transparent; }
+  .btn.danger { background: transparent; color: #fca5a5; border-color: #7f1d1d; }
+  .btn.block { width: 100%; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .stepper { display: flex; align-items: stretch; gap: 10px; }
+  .stepper button {
+    flex: 0 0 auto; width: 56px; min-height: 56px; font-size: 1.6rem; font-weight: 700;
+    background: var(--panel-2); color: var(--text); border: 1px solid var(--line); border-radius: 12px;
+  }
+  .stepper button:active { background: var(--line); }
+  .stepper .val {
+    flex: 1 1 auto; display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; font-weight: 700; background: var(--panel-2);
+    border: 1px solid var(--line); border-radius: 12px; min-width: 72px;
+  }
+
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; }
+
+  .team-setup { border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 10px; background: var(--panel-2); }
+  .team-setup .seed { font-size: 0.8rem; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .players { margin-top: 10px; }
+  .players input { margin-bottom: 8px; }
+
+  .seg { display: flex; gap: 8px; }
+  .seg .opt {
+    flex: 1; text-align: center; padding: 12px; border-radius: 12px;
+    border: 1px solid var(--line); background: var(--panel-2); color: var(--text);
+    font-weight: 600; min-height: 48px;
+  }
+  .seg .opt.active { border-color: var(--accent); background: rgba(245,158,11,0.14); color: var(--accent); }
+  .seg .opt:disabled { opacity: 0.45; }
+  .seg .opt small { display:block; font-weight: 500; color: var(--muted); font-size: 0.72rem; }
+
+  /* Bracket */
+  .round { margin-bottom: 22px; }
+  .round h2 {
+    font-size: 0.95rem; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--muted); margin: 0 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--line);
+  }
+  .match {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--radius); margin-bottom: 14px; overflow: hidden;
+  }
+  .match.decided { border-color: #334155; }
+  .slot {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  }
+  .slot + .slot { border-top: 1px dashed var(--line); }
+  .slot .info { flex: 1; min-width: 0; }
+  .slot .name { font-weight: 700; font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .slot .sub { font-size: 0.78rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .slot .seedtag {
+    flex: 0 0 auto; width: 26px; height: 26px; border-radius: 8px; font-size: 0.75rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; background: var(--panel-2); color: var(--muted);
+  }
+  .slot.winner { background: rgba(22,163,74,0.14); }
+  .slot.winner .name { color: #86efac; }
+  .slot.loser { opacity: 0.5; }
+  .slot.loser .name { text-decoration: line-through; }
+  .slot.tbd .name { color: var(--muted); font-weight: 600; }
+  .slot.bye .name { color: var(--muted); font-style: italic; font-weight: 600; }
+
+  .winbtn {
+    flex: 0 0 auto; min-width: 96px; min-height: 52px; padding: 0 18px;
+    border-radius: 12px; font-weight: 800; font-size: 1rem;
+    background: var(--win); color: #eafff0; border: 1px solid transparent;
+  }
+  .winbtn:active { background: var(--win-press); transform: translateY(1px); }
+  .winbtn:disabled { background: var(--panel-2); color: var(--muted); }
+  .wonchip {
+    flex: 0 0 auto; min-width: 96px; text-align: center; font-weight: 800; color: #86efac;
+    font-size: 0.9rem; letter-spacing: 0.5px;
+  }
+
+  .champ {
+    text-align: center; padding: 22px 16px; border-radius: var(--radius);
+    background: linear-gradient(160deg, rgba(245,158,11,0.22), rgba(245,158,11,0.06));
+    border: 1px solid var(--accent); margin-bottom: 16px;
+  }
+  .champ .lbl { color: var(--accent); text-transform: uppercase; letter-spacing: 2px; font-size: 0.8rem; font-weight: 700; }
+  .champ .who { font-size: 1.8rem; font-weight: 800; margin: 4px 0; }
+  .champ .players { color: var(--muted); font-size: 0.9rem; margin: 0; }
+
+  /* Sticky action bar */
+  .actionbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+    background: rgba(15,23,42,0.92); backdrop-filter: blur(8px);
+    border-top: 1px solid var(--line);
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+    display: flex; gap: 10px; max-width: 640px; margin: 0 auto;
+  }
+  .actionbar .btn { flex: 1; }
+
+  .hint { font-size: 0.82rem; color: var(--muted); margin-top: 6px; }
+  .hidden { display: none !important; }
+  .err { color: #fca5a5; font-size: 0.85rem; margin-top: 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app">
+    <h1>🌽 Corn<span>hole</span> Bracket</h1>
+    <span class="muted" id="subtitle"></span>
+  </header>
+
+  <!-- SETUP -->
+  <section id="setup">
+    <div class="card">
+      <label>How many teams? (2–32)</label>
+      <div class="stepper">
+        <button type="button" id="teamMinus" aria-label="Fewer teams">−</button>
+        <div class="val" id="teamCount">4</div>
+        <button type="button" id="teamPlus" aria-label="More teams">+</button>
+      </div>
+      <div class="hint">Non‑power‑of‑two counts are fine — top seeds get first‑round byes.</div>
+    </div>
+
+    <div class="card">
+      <label>Format</label>
+      <div class="seg" id="formatSeg">
+        <button type="button" class="opt active" data-format="single">Single Elim<small>ship‑ready</small></button>
+        <button type="button" class="opt" data-format="double" disabled>Double Elim<small>coming soon</small></button>
+      </div>
+    </div>
+
+    <div class="card">
+      <label>Teams &amp; players <span class="muted">(seed order = strength, top seed first)</span></label>
+      <div id="teamList"></div>
+    </div>
+
+    <button type="button" class="btn primary block" id="startBtn" style="min-height:56px;font-size:1.1rem;">Start Tournament</button>
+    <div class="err hidden" id="setupErr"></div>
+  </section>
+
+  <!-- TOURNAMENT -->
+  <section id="tournament" class="hidden">
+    <div id="champBox"></div>
+    <div id="bracket"></div>
+  </section>
+</div>
+
+<!-- Sticky actions (tournament view) -->
+<div class="actionbar hidden" id="actionbar">
+  <button type="button" class="btn" id="undoBtn">↶ Undo</button>
+  <button type="button" class="btn danger" id="resetBtn">New Tournament</button>
+</div>
+
+<script>
+"use strict";
+(function () {
+  const STORE_KEY = "cornhole-bracket-v1";
+  const MIN_TEAMS = 2, MAX_TEAMS = 32;
+
+  // ---------- App state ----------
+  let ui = { teamCount: 4, format: "single", setupTeams: [] };
+  let state = null; // active tournament: {format, teams, rounds, champion} — persisted with history
+  let history = [];  // stack of JSON snapshots of `state` for multi‑undo
+
+  // ---------- Elements ----------
+  const $ = (id) => document.getElementById(id);
+  const setupEl = $("setup"), tourneyEl = $("tournament"), actionbar = $("actionbar");
+
+  // ---------- Seeding ----------
+  // Standard bracket seed order for a power-of-two size, e.g. 4 -> [1,4,2,3]
+  function seedOrder(size) {
+    let seeds = [1];
+    while (seeds.length < size) {
+      const round = seeds.length * 2 + 1;
+      const next = [];
+      for (const s of seeds) { next.push(s); next.push(round - s); }
+      seeds = next;
+    }
+    return seeds;
+  }
+  function nextPow2(n) { let p = 1; while (p < n) p <<= 1; return p; }
+
+  // ---------- Bracket generation (single elimination) ----------
+  function buildSingleElim(teams) {
+    const n = teams.length;
+    const size = nextPow2(n);
+    const order = seedOrder(size); // seeds 1..size in bracket position order
+    // Map seed -> team (seed s corresponds to teams[s-1]); seeds > n are BYEs.
+    const slots = order.map((seed) => (seed <= n ? teams[seed - 1].id : null));
+
+    const rounds = [];
+    // Round 1 matches
+    let round1 = [];
+    for (let i = 0; i < slots.length; i += 2) {
+      round1.push(makeMatch(0, round1.length, slots[i], slots[i + 1]));
+    }
+    rounds.push(round1);
+    // Subsequent empty rounds
+    let count = round1.length;
+    let r = 1;
+    while (count > 1) {
+      const round = [];
+      for (let i = 0; i < count / 2; i++) round.push(makeMatch(r, i, null, null));
+      rounds.push(round);
+      count = count / 2;
+      r++;
+    }
+
+    const st = { format: "single", teams, rounds, champion: null };
+    // Auto-resolve first-round byes
+    for (const m of rounds[0]) {
+      const aBye = m.a === null, bBye = m.b === null;
+      if (aBye && bBye) continue; // shouldn't happen with valid counts
+      if (aBye || bBye) {
+        const winner = aBye ? m.b : m.a;
+        m.winner = winner; m.bye = true;
+        propagate(st, m, winner);
+      }
+    }
+    return st;
+  }
+
+  function makeMatch(round, index, a, b) {
+    return { id: "r" + round + "m" + index, round, index, a, b, winner: null, bye: false };
+  }
+
+  // Place a winner into the next round's correct slot
+  function propagate(st, match, teamId) {
+    const nextRound = match.round + 1;
+    if (nextRound >= st.rounds.length) { st.champion = teamId; return; }
+    const target = st.rounds[nextRound][Math.floor(match.index / 2)];
+    if (match.index % 2 === 0) target.a = teamId; else target.b = teamId;
+    // If this feeder game got auto-resolved via a bye and the target now faces a bye too,
+    // it will be handled by its own bye pass; nothing more to do here.
+  }
+
+  // ---------- Actions ----------
+  function recordWin(matchId, teamId) {
+    const m = findMatch(matchId);
+    if (!m || m.winner) return;            // already decided → must undo to change
+    if (!m.a || !m.b) return;              // not ready
+    pushHistory();
+    m.winner = teamId;
+    propagate(state, m, teamId);
+    persist();
+    renderTournament();
+  }
+
+  function undo() {
+    if (!history.length) return;
+    state = JSON.parse(history.pop());
+    persist();
+    renderTournament();
+  }
+
+  function pushHistory() { history.push(JSON.stringify(state)); }
+
+  function findMatch(id) {
+    for (const round of state.rounds) for (const m of round) if (m.id === id) return m;
+    return null;
+  }
+  function teamById(id) { return state.teams.find((t) => t.id === id) || null; }
+
+  // ---------- Persistence ----------
+  function persist() {
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify({ state, history, ui }));
+    } catch (e) { /* storage full / unavailable — ignore */ }
+  }
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (!raw) return false;
+      const data = JSON.parse(raw);
+      if (data.ui) ui = Object.assign(ui, data.ui);
+      if (data.state) { state = data.state; history = data.history || []; return true; }
+    } catch (e) { /* corrupt — start fresh */ }
+    return false;
+  }
+
+  // ---------- Round names ----------
+  function roundName(matchesInRound, roundIdx, totalRounds) {
+    if (matchesInRound === 1) return "Final";
+    if (matchesInRound === 2) return "Semifinals";
+    if (matchesInRound === 4) return "Quarterfinals";
+    return "Round of " + matchesInRound * 2;
+  }
+
+  // ================= RENDERING =================
+  function renderSetup() {
+    $("teamCount").textContent = ui.teamCount;
+    $("subtitle").textContent = "";
+    // Ensure setupTeams length matches count
+    syncSetupTeams();
+    const list = $("teamList");
+    list.innerHTML = "";
+    for (let i = 0; i < ui.teamCount; i++) {
+      const t = ui.setupTeams[i];
+      const wrap = document.createElement("div");
+      wrap.className = "team-setup";
+      wrap.innerHTML =
+        '<div class="seed">Seed ' + (i + 1) + (i === 0 ? " · top" : "") + '</div>' +
+        '<input type="text" data-ti="' + i + '" data-k="name" placeholder="Team name" value="' + esc(t.name) + '" />' +
+        '<label style="margin-top:10px;">Players</label>' +
+        '<div class="seg playerseg" data-ti="' + i + '">' +
+          [1,2,3,4].map((p) => '<button type="button" class="opt' + (t.players.length === p ? " active" : "") + '" data-ti="' + i + '" data-pc="' + p + '">' + p + '</button>').join("") +
+        '</div>' +
+        '<div class="players">' +
+          t.players.map((pn, pi) => '<input type="text" data-ti="' + i + '" data-pi="' + pi + '" placeholder="Player ' + (pi + 1) + ' name (optional)" value="' + esc(pn) + '" />').join("") +
+        '</div>';
+      list.appendChild(wrap);
+    }
+  }
+
+  function syncSetupTeams() {
+    const arr = ui.setupTeams;
+    while (arr.length < ui.teamCount) {
+      arr.push({ name: "Team " + (arr.length + 1), players: ["", ""] });
+    }
+    arr.length = ui.teamCount;
+  }
+
+  function renderTournament() {
+    setupEl.classList.add("hidden");
+    tourneyEl.classList.remove("hidden");
+    actionbar.classList.remove("hidden");
+    $("undoBtn").disabled = history.length === 0;
+    $("subtitle").textContent = state.teams.length + " teams · single elim";
+
+    // Champion banner
+    const champBox = $("champBox");
+    if (state.champion) {
+      const c = teamById(state.champion);
+      const players = c.players.filter(Boolean).join(" & ");
+      champBox.innerHTML =
+        '<div class="champ"><div class="lbl">🏆 Champion</div>' +
+        '<div class="who">' + esc(c.name) + '</div>' +
+        (players ? '<p class="players">' + esc(players) + '</p>' : '') + '</div>';
+    } else {
+      champBox.innerHTML = "";
+    }
+
+    // Rounds
+    const bracket = $("bracket");
+    bracket.innerHTML = "";
+    state.rounds.forEach((round, ri) => {
+      const sec = document.createElement("div");
+      sec.className = "round";
+      const h = document.createElement("h2");
+      h.textContent = roundName(round.length, ri, state.rounds.length);
+      sec.appendChild(h);
+      round.forEach((m) => sec.appendChild(renderMatch(m)));
+      bracket.appendChild(sec);
+    });
+  }
+
+  function renderMatch(m) {
+    const el = document.createElement("div");
+    el.className = "match" + (m.winner ? " decided" : "");
+    el.appendChild(renderSlot(m, "a"));
+    el.appendChild(renderSlot(m, "b"));
+    return el;
+  }
+
+  function renderSlot(m, key) {
+    const teamId = m[key];
+    const otherId = m[key === "a" ? "b" : "a"];
+    const slot = document.createElement("div");
+    slot.className = "slot";
+
+    // BYE slot (only possible in round 1 structurally; the real team auto-advanced)
+    if (teamId === null && m.round === 0 && otherId !== null) {
+      slot.classList.add("bye");
+      slot.innerHTML = '<div class="seedtag">–</div><div class="info"><div class="name">Bye</div></div>';
+      return slot;
+    }
+    if (teamId === null) {
+      slot.classList.add("tbd");
+      slot.innerHTML = '<div class="seedtag">?</div><div class="info"><div class="name">To be decided</div></div>';
+      return slot;
+    }
+
+    const t = teamById(teamId);
+    const seed = state.teams.indexOf(t) + 1;
+    const players = t.players.filter(Boolean).join(" & ");
+    const decided = !!m.winner;
+    const isWinner = m.winner === teamId;
+
+    if (decided) slot.classList.add(isWinner ? "winner" : "loser");
+
+    slot.innerHTML =
+      '<div class="seedtag">' + seed + '</div>' +
+      '<div class="info"><div class="name">' + esc(t.name) + '</div>' +
+      (players ? '<div class="sub">' + esc(players) + '</div>' : '') + '</div>';
+
+    const ready = m.a !== null && m.b !== null;
+    if (decided) {
+      if (isWinner) {
+        const chip = document.createElement("div");
+        chip.className = "wonchip";
+        chip.textContent = m.bye ? "BYE ✓" : "WON ✓";
+        slot.appendChild(chip);
+      }
+    } else if (ready) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "winbtn";
+      btn.textContent = "Wins";
+      btn.addEventListener("click", () => recordWin(m.id, teamId));
+      slot.appendChild(btn);
+    }
+    return slot;
+  }
+
+  // ---------- Start / reset ----------
+  function startTournament() {
+    // Read current input values into setupTeams (in case of unblurred fields)
+    harvestSetupInputs();
+    const err = $("setupErr");
+    // Build team objects with ids & default names
+    const teams = ui.setupTeams.map((t, i) => ({
+      id: "t" + i,
+      name: (t.name && t.name.trim()) ? t.name.trim() : "Team " + (i + 1),
+      players: t.players.map((p) => (p || "").trim()),
+    }));
+    if (teams.length < MIN_TEAMS) {
+      err.textContent = "Need at least 2 teams."; err.classList.remove("hidden"); return;
+    }
+    err.classList.add("hidden");
+    state = buildSingleElim(teams);
+    history = [];
+    persist();
+    renderTournament();
+    window.scrollTo(0, 0);
+  }
+
+  function resetTournament() {
+    if (!confirm("Start a new tournament? This clears the current bracket.")) return;
+    state = null; history = [];
+    try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+    // keep ui.setupTeams so names can be reused; re-render setup
+    tourneyEl.classList.add("hidden");
+    actionbar.classList.add("hidden");
+    setupEl.classList.remove("hidden");
+    $("subtitle").textContent = "";
+    renderSetup();
+    window.scrollTo(0, 0);
+  }
+
+  function harvestSetupInputs() {
+    document.querySelectorAll('#teamList input[type=text]').forEach((inp) => {
+      const ti = +inp.dataset.ti;
+      if (!ui.setupTeams[ti]) return;
+      if (inp.dataset.k === "name") ui.setupTeams[ti].name = inp.value;
+      else if (inp.dataset.pi !== undefined) ui.setupTeams[ti].players[+inp.dataset.pi] = inp.value;
+    });
+  }
+
+  // ---------- Utilities ----------
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  // ---------- Event wiring ----------
+  $("teamMinus").addEventListener("click", () => { if (ui.teamCount > MIN_TEAMS) { harvestSetupInputs(); ui.teamCount--; renderSetup(); } });
+  $("teamPlus").addEventListener("click", () => { if (ui.teamCount < MAX_TEAMS) { harvestSetupInputs(); ui.teamCount++; renderSetup(); } });
+
+  // Delegated handlers for the team list (player-count segs + inputs)
+  $("teamList").addEventListener("click", (e) => {
+    const opt = e.target.closest(".playerseg .opt");
+    if (!opt) return;
+    harvestSetupInputs();
+    const ti = +opt.dataset.ti, pc = +opt.dataset.pc;
+    const t = ui.setupTeams[ti];
+    if (pc < t.players.length) t.players.length = pc;
+    else while (t.players.length < pc) t.players.push("");
+    renderSetup();
+  });
+  $("teamList").addEventListener("input", (e) => {
+    const inp = e.target;
+    if (inp.tagName !== "INPUT") return;
+    const ti = +inp.dataset.ti;
+    if (!ui.setupTeams[ti]) return;
+    if (inp.dataset.k === "name") ui.setupTeams[ti].name = inp.value;
+    else if (inp.dataset.pi !== undefined) ui.setupTeams[ti].players[+inp.dataset.pi] = inp.value;
+  });
+
+  // Format segment (double disabled for now)
+  $("formatSeg").addEventListener("click", (e) => {
+    const opt = e.target.closest(".opt");
+    if (!opt || opt.disabled) return;
+    document.querySelectorAll("#formatSeg .opt").forEach((o) => o.classList.remove("active"));
+    opt.classList.add("active");
+    ui.format = opt.dataset.format;
+  });
+
+  $("startBtn").addEventListener("click", startTournament);
+  $("undoBtn").addEventListener("click", undo);
+  $("resetBtn").addEventListener("click", resetTournament);
+
+  // ---------- Boot ----------
+  if (load() && state) {
+    renderTournament();
+  } else {
+    renderSetup();
+  }
+})();
+</script>
+</body>
+</html>
