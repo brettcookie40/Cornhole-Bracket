@@ -23,7 +23,7 @@
     --l-accent: #fbbf24; --l-tint: rgba(245,158,11,0.10); --l-border: #7c5211;
     --g-accent: #a5b4fc; --g-tint: rgba(99,102,241,0.12); --g-border: #4c4a9e;
     --radius: 14px;
-    --cardW: 190px; --cardH: 96px;
+    --cardW: 224px; --cardH: 118px;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; padding: 0; }
@@ -116,12 +116,12 @@
   .section.GF .match { border-color: var(--g-border); background: linear-gradient(180deg, var(--g-tint), transparent); }
   .match.decided { border-style: solid; }
 
-  .slot { display: flex; align-items: center; gap: 8px; padding: 6px 8px; height: 50%; }
+  .slot { display: flex; align-items: center; gap: 8px; padding: 6px 8px; height: 50%; overflow: hidden; }
   .slot + .slot { border-top: 1px dashed var(--line); }
   .slot .seedtag { flex: 0 0 auto; width: 22px; height: 22px; border-radius: 6px; font-size: 0.7rem; font-weight: 700;
     display: flex; align-items: center; justify-content: center; background: var(--panel-2); color: var(--muted); }
   .slot .info { flex: 1; min-width: 0; }
-  .slot .name { font-weight: 700; font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .slot .name { font-weight: 700; font-size: 0.9rem; line-height: 1.14; overflow-wrap: anywhere; }
   .slot .sub { font-size: 0.68rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .slot.winner { background: rgba(22,163,74,0.20); }
   .slot.winner .name { color: #86efac; }
@@ -201,7 +201,7 @@
 (function () {
   const STORE_KEY = "cornhole-bracket-v2";
   const MIN_TEAMS = 2, MAX_TEAMS = 32;
-  const CW = 190, CH = 96, GAP = 54, PITCH = 128, TOP = 30, PADX = 12;
+  const CW = 224, CH = 118, GAP = 52, PITCH = 150, TOP = 30, PADX = 12;
 
   let ui = { teamCount: 4, format: "single", bracketReset: false, setupTeams: [] };
   let state = null;   // { format, bracketReset, teams, M, Wr, Lr, GF, champion }
@@ -410,6 +410,18 @@
          { key: "L", title: "Losers bracket", rounds: state.Lr },
          { key: "GF", title: "Grand final", rounds: gfRounds() }];
     sections.forEach((s) => { if (s.rounds.length) container.appendChild(renderSection(s)); });
+    fitNames(container);
+  }
+
+  // Safety net: shrink any name that still overflows its fixed-height slot so it stays fully readable.
+  function fitNames(container) {
+    container.querySelectorAll(".slot").forEach((slot) => {
+      const nm = slot.querySelector(".name"); if (!nm) return;
+      let size = parseFloat(getComputedStyle(nm).fontSize), guard = 0;
+      while (slot.scrollHeight > slot.clientHeight + 1 && size > 10 && guard++ < 24) {
+        size -= 1; nm.style.fontSize = size + "px";
+      }
+    });
   }
 
   function gfRounds() {
