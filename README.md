@@ -31,7 +31,7 @@ Players per team (1–4) and player names are optional and shown under each team
   team winning the grand final ends the tournament immediately.
 
 ## Use it
-[JoyCollect live site](https://brettcookie40.github.io/Cornhole-Bracket/)
+[Cornhole Bracket live site](https://brettcookie40.github.io/Cornhole-Bracket/)
 
 In test:
 Open `index.html` in any modern browser — that's it. Nothing to install.
